@@ -10,7 +10,9 @@ for (const f of required) if (!existsSync(f)) { console.error('✗ ملف ناق
 
 function walk(d) { return readdirSync(d).flatMap(n => { const p = join(d, n); return statSync(p).isDirectory() ? walk(p) : [p]; }); }
 for (const file of walk('www').filter(p => /\.(html|js|css)$/.test(p) && !p.includes('vendor'))) {
-  const txt = readFileSync(file, 'utf8');
+  let txt = readFileSync(file, 'utf8');
+  // تجاهل التعليقات في ملفات CSS (مثل ترويسة الترخيص لـ tailwind اللي فيها رابط)
+  if (file.endsWith('.css')) txt = txt.replace(/\/\*[\s\S]*?\*\//g, '');
   for (const m of txt.matchAll(/https?:\/\/[^"'`\s)<>;]+/g)) {
     if (!allowed.some(r => r.test(m[0]))) { console.error(`✗ رابط خارجي في ${file}: ${m[0]}`); bad++; }
   }
