@@ -1,0 +1,49 @@
+{
+  "name": "github-nexus",
+  "version": "1.5.0",
+  "private": true,
+  "description": "GitHub Nexus - Repo Manager Pro (offline-ready web build for Android/Capacitor)",
+  "scripts": {
+    "vendor": "node scripts/copy-vendor.mjs",
+    "css": "tailwindcss -c tailwind.config.js -i src/input.css -o www/css/tailwind.css --minify",
+    "css:watch": "tailwindcss -c tailwind.config.js -i src/input.css -o www/css/tailwind.css --watch",
+    "check": "node scripts/check-offline.mjs",
+    "build": "npm run vendor && npm run css && npm run check",
+    "serve": "node scripts/serve.mjs",
+    "android:init": "npm run build && npx cap add android && npm run android:assets && npx cap sync android && node scripts/patch-android.mjs",
+    "android:sync": "npm run build && npx cap sync android && node scripts/patch-android.mjs",
+    "android:open": "npx cap open android",
+    "android:run": "npm run android:sync && npx cap run android",
+    "android:apk": "npm run android:sync && node scripts/gradle.mjs assembleDebug",
+    "android:assets": "capacitor-assets generate --android --iconBackgroundColor \"#2563eb\" --splashBackgroundColor \"#020617\" --splashBackgroundColorDark \"#020617\"",
+    "keystore": "node scripts/make-keystore.mjs",
+    "release:apk": "npm run android:sync && node scripts/gradle.mjs assembleRelease",
+    "release:aab": "npm run android:sync && node scripts/gradle.mjs bundleRelease",
+    "release": "npm run android:sync && node scripts/gradle.mjs assembleRelease bundleRelease",
+    "version:patch": "npm version patch --no-git-tag-version",
+    "version:minor": "npm version minor --no-git-tag-version"
+  },
+  "dependencies": {
+    "jszip": "3.10.1",
+    "lucide": "0.469.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/network": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
+    "@capacitor/splash-screen": "^7.0.0",
+    "@capacitor-community/keep-awake": "^6.0.0",
+    "capacitor-secure-storage-plugin": "^0.11.0"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17",
+    "@fontsource/inter": "5.1.1",
+    "@fontsource/jetbrains-mono": "5.1.2",
+    "@capacitor/cli": "^7.0.0",
+    "@fontsource/ibm-plex-sans-arabic": "5.1.1",
+    "@capacitor/assets": "^3.0.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
