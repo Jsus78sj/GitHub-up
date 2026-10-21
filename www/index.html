@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.github.com; img-src 'self' data: https://avatars.githubusercontent.com https://*.githubusercontent.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self';">
+    <meta name="theme-color" content="#020617">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>GitHub Nexus · Repo Manager Pro</title>
+
+    <link rel="stylesheet" href="fonts/fonts.css">
+    <link rel="stylesheet" href="css/tailwind.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="text-slate-200 antialiased overflow-x-hidden">
+    <div class="grain-overlay"></div>
+    
+    <div class="relative z-10 min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="border-b border-white/5 bg-slate-950/50 backdrop-blur-xl sticky top-0 z-40">
+            <div class="container mx-auto px-4 py-4 max-w-6xl flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-blue-500 blur-xl opacity-50 rounded-full"></div>
+                        <div class="relative p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl shadow-lg">
+                            <i data-lucide="github" class="w-6 h-6 text-white"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold bg-gradient-to-r from-blue-200 via-indigo-200 to-slate-200 bg-clip-text text-transparent">
+                            GitHub Nexus
+                        </h1>
+                        <p class="text-xs text-slate-500 font-medium tracking-wide">REPO MANAGER PRO</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                <button id="langToggle" onclick="toggleLanguage()" class="lang-toggle px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-colors" title="Language">ع</button>
+                <div id="headerActions" class="hidden items-center gap-3">
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/5 text-xs">
+                        <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                        <span class="text-slate-400">Connected</span>
+                    </div>
+                    <button onclick="disconnect()" class="p-2 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors" title="Disconnect">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 container mx-auto px-4 py-8 max-w-6xl">
+            
+            <!-- Step 1: Authentication -->
+            <section id="step1" class="max-w-md mx-auto fade-in">
+                <div class="glass-panel rounded-2xl p-8">
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/20 mb-4">
+                            <i data-lucide="key-round" class="w-8 h-8 text-blue-400"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white mb-2">Welcome back</h2>
+                        <p class="text-sm text-slate-400">Enter your GitHub Personal Access Token to continue</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="relative group">
+                            <label class="block text-xs font-medium text-slate-400 mb-2 ms-1">Personal Access Token</label>
+                            <div class="relative">
+                                <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxx" 
+                                    class="w-full input-fancy rounded-xl px-4 py-3.5 pe-12 text-sm font-mono tracking-wider placeholder:text-slate-600"
+                                    onkeydown="if(event.key==='Enter') fetchRepos()">
+                                <button onclick="toggleTokenVisibility()" class="absolute end-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-white/5 text-slate-500 hover:text-slate-300 transition-colors">
+                                    <i data-lucide="eye" class="w-4 h-4" id="eyeIcon"></i>
+                                </button>
+                            </div>
+                            <p class="mt-2 text-xs text-slate-500 flex items-center gap-1.5">
+                                <i data-lucide="info" class="w-3 h-3"></i>
+                                Requires <code class="bg-white/5 px-1.5 py-0.5 rounded text-slate-400">repo</code> scope
+                            </p>
+                        </div>
+                        
+                        <button onclick="fetchRepos()" id="fetchBtn" class="btn-primary w-full py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm">
+                            <i data-lucide="zap" class="w-4 h-4"></i>
+                            <span>Connect to GitHub</span>
+                        </button>
+                        
+                        <div class="pt-4 border-t border-white/5">
+                            <p class="desktop-only text-xs text-center text-slate-500">
+                                Press <kbd class="shortcut-key">Enter</kbd> to connect
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- User Profile Bar -->
+            <div id="userBar" class="hidden mb-8 fade-in">
+                <div class="glass-panel rounded-2xl p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="relative">
+                            <img id="userAvatar" src="" alt="avatar" class="w-12 h-12 rounded-full border-2 border-slate-700 shadow-xl">
+                            <div class="absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 bg-emerald-400 border-2 border-slate-900 rounded-full"></div>
+                        </div>
+                        <div>
+                            <p class="font-bold text-white text-lg" id="userName"></p>
+                            <p class="text-sm text-slate-400 font-mono" id="userLogin"></p>
+                        </div>
+                    </div>
+                    <button onclick="openCreateRepoModal()" class="btn-success px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 text-sm transition-all hover:scale-105">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>New Repository</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Repository Selection -->
+            <section id="step2" class="hidden fade-in mb-8">
+                <div class="glass-panel rounded-2xl p-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="step-number w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm">1</div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white">Select Repository</h2>
+                                <p class="text-sm text-slate-400">Choose a target for deployment</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="repoCountBadge" class="badge px-3 py-1.5 rounded-full text-xs font-medium text-slate-300">0 repos</span>
+                            <button onclick="refreshRepos()" class="p-2.5 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white transition-colors" title="Refresh">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="flex gap-1 p-1 bg-slate-950/50 rounded-xl mb-6 border border-white/5">
+                        <button onclick="switchTab('existing')" id="tabExisting" class="flex-1 tab-active px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="folder-open" class="w-4 h-4"></i>
+                            Existing Repos
+                        </button>
+                        <button onclick="switchTab('new')" id="tabNew" class="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="circle-plus" class="w-4 h-4"></i>
+                            Create New
+                        </button>
+                    </div>
+
+                    <!-- Existing Repos View -->
+                    <div id="existingReposView" class="space-y-4">
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <div class="relative flex-1">
+                                <i data-lucide="search" class="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+                                <input type="text" id="repoSearch" placeholder="Search repositories..." 
+                                    class="w-full input-fancy rounded-xl ps-10 pe-4 py-2.5 text-sm"
+                                    oninput="filterRepos()">
+                            </div>
+                            <select id="visibilityFilter" onchange="filterRepos()" 
+                                class="input-fancy rounded-xl px-4 py-2.5 text-sm min-w-[120px]">
+                                <option value="all">All Types</option>
+                                <option value="public">Public</option>
+                                <option value="private">Private</option>
+                            </select>
+                        </div>
+                        
+                        <div id="repoList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[480px] overflow-y-auto custom-scroll p-1">
+                            <!-- Repos injected here -->
+                        </div>
+                    </div>
+
+                    <!-- New Repo View -->
+                    <div id="newRepoView" class="hidden text-center py-12">
+                        <button onclick="openCreateRepoModal()" class="group inline-flex flex-col items-center gap-3 p-8 rounded-2xl border-2 border-dashed border-slate-700 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all">
+                            <div class="p-4 rounded-full bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
+                                <i data-lucide="plus" class="w-8 h-8 text-emerald-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-emerald-400">Create New Repository</h3>
+                                <p class="text-sm text-slate-500 mt-1">Set up a fresh repo for deployment</p>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Selected Repo Info -->
+                    <div id="selectedRepoInfo" class="hidden mt-6 pt-6 border-t border-white/5">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                                    <i data-lucide="circle-check" class="w-5 h-5 text-blue-400"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Selected Target</p>
+                                    <p id="selectedRepoName" class="font-bold text-white font-mono text-lg"></p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-2 bg-slate-950/50 rounded-xl p-1 border border-white/5">
+                                    <span class="ps-3 text-xs text-slate-400 font-medium">Branch:</span>
+                                    <select id="branchSelect" onchange="onBranchChange()" 
+                                        class="bg-transparent py-2 pe-8 ps-2 text-sm font-mono text-white focus:outline-none cursor-pointer">
+                                    </select>
+                                </div>
+                                <button onclick="openCreateBranchModal()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors border border-white/5" title="New Branch">
+                                    <i data-lucide="git-branch-plus" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 3: Deploy Center -->
+            <section id="step3" class="hidden fade-in">
+                <div class="glass-panel rounded-2xl p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="step-number w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm">2</div>
+                        <div>
+                            <h2 class="text-xl font-bold text-white">Deploy Center</h2>
+                            <p class="text-sm text-slate-400">Configure deployment and upload files</p>
+                        </div>
+                    </div>
+
+                    <!-- Target Info -->
+                    <div class="flex items-center gap-3 mb-6 p-4 rounded-xl bg-slate-950/30 border border-white/5">
+                        <i data-lucide="target" class="w-5 h-5 text-slate-500"></i>
+                        <div class="flex items-center gap-2 text-sm flex-wrap">
+                            <span class="text-slate-400">Target:</span>
+                            <span id="targetRepo" class="font-mono text-white bg-white/5 px-2 py-0.5 rounded"></span>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-600"></i>
+                            <span id="targetBranch" class="font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"></span>
+                        </div>
+                    </div>
+
+                    <!-- Deployment Mode -->
+                    <div class="mb-6">
+                        <label class="block text-xs font-medium text-slate-400 mb-3 uppercase tracking-wider">Deployment Strategy</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label class="radio-card rounded-xl p-5 cursor-pointer selected" id="modeFullSyncLabel" onclick="updateDeployMode('fullSync')">
+                                <div class="flex items-start gap-4">
+                                    <input type="radio" name="deployMode" value="fullSync" checked class="mt-1 w-4 h-4 accent-blue-500">
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div class="flex items-center gap-2">
+                                                <i data-lucide="refresh-cw" class="w-4 h-4 text-rose-400"></i>
+                                                <span class="font-semibold text-white">Full Sync</span>
+                                            </div>
+                                            <span class="text-[10px] uppercase tracking-wider text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">Mirror</span>
+                                        </div>
+                                        <p class="text-xs text-slate-400 leading-relaxed">
+                                            Replaces entire repository with ZIP contents. Files not in ZIP will be deleted.
+                                        </p>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="radio-card rounded-xl p-5 cursor-pointer" id="modePartialLabel" onclick="updateDeployMode('partial')">
+                                <div class="flex items-start gap-4">
+                                    <input type="radio" name="deployMode" value="partial" class="mt-1 w-4 h-4 accent-blue-500">
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div class="flex items-center gap-2">
+                                                <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
+                                                <span class="font-semibold text-white">Partial Update</span>
+                                            </div>
+                                            <span class="text-[10px] uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Merge</span>
+                                        </div>
+                                        <p class="text-xs text-slate-400 leading-relaxed">
+                                            Adds new files and updates existing ones. Preserves files not present in ZIP.
+                                        </p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Upload Speed -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Upload Speed</label>
+                            <span class="text-[10px] text-slate-500">Auto slows down if GitHub limits</span>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="speedOptions">
+                            <button type="button" class="radio-card speed-card rounded-xl p-4 text-start" data-speed="safe" onclick="setUploadSpeed('safe')">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="turtle" class="w-4 h-4 text-sky-400"></i>
+                                        <span class="font-semibold text-white text-sm">Safe</span>
+                                    </div>
+                                    <span class="font-mono text-[10px] text-slate-400 bg-white/5 px-1.5 py-0.5 rounded">2×</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 leading-snug">Weak network or very large repos</p>
+                            </button>
+                            <button type="button" class="radio-card speed-card rounded-xl p-4 text-start" data-speed="balanced" onclick="setUploadSpeed('balanced')">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="gauge" class="w-4 h-4 text-emerald-400"></i>
+                                        <span class="font-semibold text-white text-sm">Balanced</span>
+                                    </div>
+                                    <span class="font-mono text-[10px] text-slate-400 bg-white/5 px-1.5 py-0.5 rounded">6×</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 leading-snug">Recommended for most uploads</p>
+                            </button>
+                            <button type="button" class="radio-card speed-card rounded-xl p-4 text-start" data-speed="fast" onclick="setUploadSpeed('fast')">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+                                        <span class="font-semibold text-white text-sm">Fast</span>
+                                    </div>
+                                    <span class="font-mono text-[10px] text-slate-400 bg-white/5 px-1.5 py-0.5 rounded">10×</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 leading-snug">Strong Wi-Fi / 4G+</p>
+                            </button>
+                            <button type="button" class="radio-card speed-card rounded-xl p-4 text-start" data-speed="turbo" onclick="setUploadSpeed('turbo')">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="rocket" class="w-4 h-4 text-rose-400"></i>
+                                        <span class="font-semibold text-white text-sm">Turbo</span>
+                                    </div>
+                                    <span class="font-mono text-[10px] text-slate-400 bg-white/5 px-1.5 py-0.5 rounded">16×</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 leading-snug">Max speed, may hit GitHub limits</p>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Drop Zone -->
+                    <div class="mb-6">
+                        <label class="block text-xs font-medium text-slate-400 mb-3 uppercase tracking-wider">Upload Archive</label>
+                        <div id="dropZone" class="drop-zone rounded-2xl p-10 text-center cursor-pointer transition-all" 
+                            onclick="document.getElementById('fileInput').click()" 
+                            ondrop="handleDrop(event)" 
+                            ondragover="handleDragOver(event)" 
+                            ondragleave="handleDragLeave(event)">
+                            
+                            <input type="file" id="fileInput" accept=".zip" class="hidden" onchange="handleFileSelect(event)">
+                            
+                            <div id="dropContent" class="space-y-3">
+                                <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                                    <i data-lucide="cloud-upload" class="w-8 h-8 text-blue-400"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-white">Drop ZIP file here</p>
+                                    <p class="text-xs text-slate-500 mt-1">or click to browse • Max 100MB</p>
+                                </div>
+                            </div>
+                            
+                            <div id="fileSelected" class="hidden">
+                                <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 mb-3">
+                                    <i data-lucide="file-archive" class="w-8 h-8 text-emerald-400"></i>
+                                </div>
+                                <p id="selectedFileName" class="font-semibold text-emerald-400 font-mono text-sm mb-1"></p>
+                                <p id="fileSize" class="text-xs text-slate-500 mb-3"></p>
+                                <button onclick="clearFile(event)" class="text-xs text-rose-400 hover:text-rose-300 px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 transition-colors inline-flex items-center gap-1.5">
+                                    <i data-lucide="x" class="w-3 h-3"></i>
+                                    Remove file
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File Tree -->
+                    <div id="fileTreeSection" class="hidden mb-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="folder-tree" class="w-4 h-4 text-slate-400"></i>
+                                <span class="text-sm font-medium text-slate-300">Archive Contents</span>
+                            </div>
+                            <span id="fileCountBadge" class="badge px-2.5 py-1 rounded-full text-xs text-slate-400"></span>
+                        </div>
+                        <div class="bg-slate-950/50 rounded-xl p-4 border border-white/5 max-h-80 overflow-y-auto custom-scroll">
+                            <div id="fileTree" class="text-sm font-mono"></div>
+                        </div>
+                    </div>
+
+                    <!-- Deploy Button -->
+                    <button onclick="deployFiles()" id="deployBtn" disabled 
+                        class="btn-primary w-full py-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none">
+                        <i data-lucide="rocket" class="w-5 h-5"></i>
+                        <span>Deploy to GitHub</span>
+                        <span class="hidden sm:inline desktop-only text-blue-200/60 text-xs ms-2">⌘Enter</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Progress Section -->
+            <section id="progressSection" class="hidden fade-in mt-8">
+                <div class="glass-panel-strong rounded-2xl p-6 border border-blue-500/20">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <i data-lucide="loader-circle" class="w-6 h-6 text-blue-400 animate-spin"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white">Deployment in Progress</h3>
+                                <p class="text-xs text-slate-400" id="progressLabel">Initializing...</p>
+                            </div>
+                        </div>
+                        <span id="progressPercent" class="text-3xl font-bold text-blue-400 font-mono">0%</span>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="h-2 bg-slate-800 rounded-full overflow-hidden border border-white/5">
+                            <div id="progressBar" class="progress-bar h-full rounded-full" style="width:0%"></div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-xs font-mono">
+                            <span id="progressStats" class="text-slate-500">0/0 files</span>
+                            <span class="text-slate-600">GitHub API</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-black/40 rounded-xl p-4 border border-white/5 max-h-64 overflow-y-auto custom-scroll">
+                        <div id="progressLog" class="space-y-2 text-xs font-mono"></div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-white/5 mt-auto py-6 bg-slate-950/30">
+            <div class="container mx-auto px-4 max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">
+                <p>GitHub Nexus • Client-side Repository Manager</p>
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center gap-1.5">
+                        <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                        Ready
+                    </span>
+                    <span>Secure Connection</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Create Repo Modal -->
+    <div id="createRepoModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4 modal">
+        <div class="glass-panel-strong rounded-2xl p-6 w-full max-w-md border border-white/10 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                        <i data-lucide="circle-plus" class="w-5 h-5 text-emerald-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">New Repository</h3>
+                </div>
+                <button onclick="closeCreateRepoModal()" class="p-2 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-2">Repository Name</label>
+                    <input type="text" id="newRepoName" placeholder="my-awesome-project" 
+                        class="w-full input-fancy rounded-xl px-4 py-3 text-sm font-mono">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-2">Description <span class="text-slate-600">(optional)</span></label>
+                    <input type="text" id="newRepoDescription" placeholder="Short project description" 
+                        class="w-full input-fancy rounded-xl px-4 py-3 text-sm">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="relative flex items-center justify-center p-3 rounded-xl border border-white/10 cursor-pointer hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all has-[:checked]:border-emerald-500/50 has-[:checked]:bg-emerald-500/10">
+                        <input type="radio" name="repoVisibility" value="public" checked class="sr-only peer">
+                        <div class="text-center">
+                            <div class="text-lg mb-1">🌍</div>
+                            <div class="text-sm font-medium text-white peer-checked:text-emerald-400">Public</div>
+                        </div>
+                    </label>
+                    <label class="relative flex items-center justify-center p-3 rounded-xl border border-white/10 cursor-pointer hover:border-rose-500/30 hover:bg-rose-500/5 transition-all has-[:checked]:border-rose-500/50 has-[:checked]:bg-rose-500/10">
+                        <input type="radio" name="repoVisibility" value="private" class="sr-only peer">
+                        <div class="text-center">
+                            <div class="text-lg mb-1">🔒</div>
+                            <div class="text-sm font-medium text-white peer-checked:text-rose-400">Private</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="flex gap-4 pt-2">
+                    <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+                        <input type="checkbox" id="initReadme" class="rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500/20">
+                        Initialize with README
+                    </label>
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeCreateRepoModal()" class="flex-1 py-2.5 rounded-xl border border-white/10 text-slate-300 hover:bg-white/5 transition-colors text-sm font-medium">
+                    Cancel
+                </button>
+                <button onclick="createRepository()" id="createRepoBtn" class="btn-success flex-1 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    Create
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Branch Modal -->
+    <div id="createBranchModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4 modal">
+        <div class="glass-panel-strong rounded-2xl p-6 w-full max-w-md border border-white/10 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                        <i data-lucide="git-branch-plus" class="w-5 h-5 text-purple-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">New Branch</h3>
+                </div>
+                <button onclick="closeCreateBranchModal()" class="p-2 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-2">Branch Name</label>
+                    <input type="text" id="newBranchName" placeholder="feature/new-feature" 
+                        class="w-full input-fancy rounded-xl px-4 py-3 text-sm font-mono">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-2">Base Branch</label>
+                    <select id="baseBranchSelect" class="w-full input-fancy rounded-xl px-4 py-3 text-sm bg-transparent">
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeCreateBranchModal()" class="flex-1 py-2.5 rounded-xl border border-white/10 text-slate-300 hover:bg-white/5 transition-colors text-sm font-medium">
+                    Cancel
+                </button>
+                <button onclick="createBranch()" id="createBranchBtn" class="bg-purple-600 hover:bg-purple-500 flex-1 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors">
+                    <i data-lucide="git-branch" class="w-4 h-4"></i>
+                    Create Branch
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal for Full Sync -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] hidden items-center justify-center p-4 modal">
+        <div class="glass-panel-strong rounded-2xl p-6 w-full max-w-md border border-rose-500/30 shadow-2xl shadow-rose-500/10">
+            <div class="flex items-center gap-3 mb-4 text-rose-400">
+                <i data-lucide="triangle-alert" class="w-8 h-8"></i>
+                <h3 class="text-lg font-bold">Destructive Operation</h3>
+            </div>
+            <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                Full Sync mode will <strong class="text-rose-400">permanently delete</strong> all files in <span id="confirmTarget" class="font-mono text-white bg-white/10 px-1.5 py-0.5 rounded"></span> that are not present in your ZIP archive.
+            </p>
+            <div class="bg-rose-500/10 border border-rose-500/20 rounded-lg p-3 mb-6">
+                <p class="text-xs text-rose-300 flex items-start gap-2">
+                    <i data-lucide="info" class="w-4 h-4 mt-0.5 shrink-0"></i>
+                    This action cannot be undone. Make sure you have a backup if needed.
+                </p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeConfirmModal()" class="flex-1 py-2.5 rounded-xl border border-white/10 text-slate-300 hover:bg-white/5 transition-colors text-sm">
+                    Cancel
+                </button>
+                <button onclick="confirmedDeploy()" class="btn-danger flex-1 py-2.5 rounded-xl text-sm font-medium">
+                    Yes, Proceed
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-6 end-6 z-50 flex flex-col gap-3 max-w-sm pointer-events-none"></div>
+
+    <script src="vendor/jszip.min.js"></script>
+    <script src="vendor/lucide.min.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/deploy.js"></script>
+    <script src="js/native.js"></script>
+</body>
+</html>
